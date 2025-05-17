@@ -1,0 +1,276 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string
+          first_name: string
+          last_name: string
+          role: "employee" | "supervisor"
+          store_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          first_name: string
+          last_name: string
+          role: "employee" | "supervisor"
+          store_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string
+          last_name?: string
+          role?: "employee" | "supervisor"
+          store_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      stores: {
+        Row: {
+          id: string
+          name: string
+          address: string
+          city: string
+          region: string
+          manager_id: string | null
+          compliance: number
+          status: "active" | "inactive" | "maintenance"
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          address: string
+          city: string
+          region: string
+          manager_id?: string | null
+          compliance?: number
+          status: "active" | "inactive" | "maintenance"
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          address?: string
+          city?: string
+          region?: string
+          manager_id?: string | null
+          compliance?: number
+          status?: "active" | "inactive" | "maintenance"
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      planograms: {
+        Row: {
+          id: string
+          name: string
+          category: string
+          department: string
+          version: string
+          thumbnail_url: string | null
+          status: "active" | "draft" | "archived"
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          category: string
+          department: string
+          version: string
+          thumbnail_url?: string | null
+          status: "active" | "draft" | "archived"
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          category?: string
+          department?: string
+          version?: string
+          thumbnail_url?: string | null
+          status?: "active" | "draft" | "archived"
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      store_planograms: {
+        Row: {
+          id: string
+          store_id: string
+          planogram_id: string
+          compliance: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          store_id: string
+          planogram_id: string
+          compliance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          store_id?: string
+          planogram_id?: string
+          compliance?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      shelves: {
+        Row: {
+          id: string
+          name: string
+          planogram_id: string
+          store_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          planogram_id: string
+          store_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          planogram_id?: string
+          store_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      verifications: {
+        Row: {
+          id: string
+          shelf_id: string
+          employee_id: string | null
+          image_url: string
+          compliance: number
+          status: "success" | "warning" | "error"
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          shelf_id: string
+          employee_id?: string | null
+          image_url: string
+          compliance: number
+          status: "success" | "warning" | "error"
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          shelf_id?: string
+          employee_id?: string | null
+          image_url?: string
+          compliance?: number
+          status?: "success" | "warning" | "error"
+          created_at?: string
+        }
+      }
+      analysis_points: {
+        Row: {
+          id: string
+          verification_id: string
+          x_position: number
+          y_position: number
+          type: "error" | "warning" | "success"
+          message: string
+          details: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          verification_id: string
+          x_position: number
+          y_position: number
+          type: "error" | "warning" | "success"
+          message: string
+          details?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          verification_id?: string
+          x_position?: number
+          y_position?: number
+          type?: "error" | "warning" | "success"
+          message?: string
+          details?: string | null
+          created_at?: string
+        }
+      }
+      tasks: {
+        Row: {
+          id: string
+          employee_id: string
+          shelf_id: string
+          title: string
+          priority: "high" | "medium" | "low"
+          status: "pending" | "completed" | "overdue"
+          scheduled_time: string | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          shelf_id: string
+          title: string
+          priority: "high" | "medium" | "low"
+          status: "pending" | "completed" | "overdue"
+          scheduled_time?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          shelf_id?: string
+          title?: string
+          priority?: "high" | "medium" | "low"
+          status?: "pending" | "completed" | "overdue"
+          scheduled_time?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+  }
+}
