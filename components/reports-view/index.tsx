@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 import {
     Search,
     FileText,
@@ -355,18 +356,13 @@ export default function ReportsView() {
                                 <SelectItem value="failed">Fallidos</SelectItem>
                             </SelectContent>
                         </Select>
-                        
-                        <Button className="w-full sm:w-auto bg-oxxo-red hover:bg-oxxo-red/90">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Nuevo Reporte
-                        </Button>
                     </div>
                 </div>
 
                 <Tabs defaultValue="recent" className="space-y-4">
                     <TabsList>
                         <TabsTrigger value="recent">Recientes</TabsTrigger>
-                        <TabsTrigger value="templates">Plantillas</TabsTrigger>
+                        <TabsTrigger value="templates">Crear Reporte</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="recent" className="space-y-4">
@@ -416,10 +412,6 @@ export default function ReportsView() {
                                                                 <span className="sr-only">Descargar</span>
                                                             </Button>
                                                         )}
-                                                        <Button variant="ghost" size="icon" className="text-oxxo-red">
-                                                            <ArrowUpRight className="h-4 w-4" />
-                                                            <span className="sr-only">Ver detalles</span>
-                                                        </Button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -448,8 +440,8 @@ export default function ReportsView() {
                     <TabsContent value="templates" className="space-y-4">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Plantillas de Reportes</CardTitle>
-                                <CardDescription>Plantillas predefinidas para generar reportes</CardDescription>
+                                <CardTitle>Plantilla de Reportes</CardTitle>
+                                <CardDescription>Plantilla predefinida para generar reportes</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

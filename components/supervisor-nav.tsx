@@ -35,7 +35,7 @@ export function SupervisorNav() {
     <div className="border-b bg-oxxo-red">
       <div className="flex h-16 items-center px-4">
         <Store className="h-6 w-6 mr-2 text-white" />
-        <h1 className="text-xl font-bold text-white">PlanogramAI</h1>
+        <h1 className="text-xl font-bold text-white">PlanoVista</h1>
 
         {isMobile ? (
           <Sheet open={open} onOpenChange={setOpen}>
@@ -151,15 +151,6 @@ export function SupervisorNav() {
                       <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Mi Perfil</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <Link href="/supervisor/settings">Configuración</Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <LogoutButton />

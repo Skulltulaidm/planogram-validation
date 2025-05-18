@@ -164,10 +164,6 @@ export default function StoreOverview({ onStoreSelect }: StoreOverviewProps) {
                       <Progress value={store.compliance} className="h-2" />
                     </div>
                     <div className="text-sm text-muted-foreground min-w-[60px]">{store.compliance}%</div>
-                    <Button variant="outline" size="sm" className="ml-auto" onClick={() => onStoreSelect(store.id)}>
-                      Ver detalles
-                      <ArrowUpRight className="ml-2 h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
               </div>

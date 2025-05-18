@@ -13,7 +13,7 @@ export function MobileNav() {
     <div className="border-b bg-oxxo-red">
       <div className="flex h-16 items-center px-4">
         <Store className="h-6 w-6 mr-2 text-white" />
-        <h1 className="text-xl font-bold text-white">PlanogramAI</h1>
+        <h1 className="text-xl font-bold text-white">PlanoVista</h1>
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
