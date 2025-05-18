@@ -34,7 +34,7 @@ export default async function EmployeeDashboard() {
   const userName = profile?.first_name || "Empleado"
   
   // Get pending tasks
-  const pendingTasks = await TasksService.getPendingTasks(user.id)
+  const pendingTasks = await TasksService.getPendingTasks(profile.id)
   const pendingTasksCount = pendingTasks.length
   
   // Get user verifications
