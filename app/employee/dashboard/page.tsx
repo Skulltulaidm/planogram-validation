@@ -31,17 +31,30 @@ export default async function EmployeeDashboard() {
     .eq("id", user.id)
     .single()
   
+  // Verificar que profile tiene datos antes de continuar
+  if (!profile) {
+    return (
+      <div className="flex-1 p-8">
+        <h2 className="text-3xl font-bold">Perfil no encontrado</h2>
+        <p className="mt-2">Tu perfil de usuario no existe. Contacta al administrador.</p>
+      </div>
+    )
+  }
+  
   const userName = profile?.first_name || "Empleado"
+  const employeeId = profile.id // Aseguramos usar consistentemente el ID del perfil
   
   // Get pending tasks
-  const pendingTasks = await TasksService.getPendingTasks(profile.id)
+  const pendingTasks = await TasksService.getPendingTasks(employeeId)
   const pendingTasksCount = pendingTasks.length
   
-  // Get user verifications
-  const userVerifications = await VerificationsService.getEmployeeVerifications(user.id)
+  // Get user verifications - también usamos el ID del perfil para ser consistentes
+  const userVerifications = await VerificationsService.getEmployeeVerifications(employeeId)
   
-  // Get compliance trend data
-  const { trend: complianceTrend, currentCompliance } = await ComplianceService.getComplianceTrend(user.id)
+  // Get compliance trend data - también usamos el ID del perfil para ser consistentes
+  const complianceData = await ComplianceService.getComplianceTrend(employeeId)
+  const complianceTrend = complianceData?.trend || "0%"
+  const currentCompliance = complianceData?.currentCompliance || 0
   const isPositiveTrend = complianceTrend.startsWith('+')
   
   // Get latest verification

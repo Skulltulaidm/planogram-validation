@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/server"
 import type { Database } from "@/lib/supabase/database.types"
 
 type Verification = Database["public"]["Tables"]["verifications"]["Row"]
@@ -14,43 +14,60 @@ export type VerificationWithShelf = Verification & {
 
 export const VerificationsService = {
   async getEmployeeVerifications(employeeId: string): Promise<VerificationWithShelf[]> {
-    const supabase = createClient()
+    const supabase = await createClient()
+    
     const { data, error } = await supabase
       .from("verifications")
-      .select("*, shelves(name, planogram_id, store_id)")
+      .select(`
+        *,
+        shelves (
+          name,
+          planogram_id,
+          store_id
+        )
+      `)
       .eq("employee_id", employeeId)
       .order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching verifications:", error)
-      throw error
+      return []
     }
 
     return (data || []) as VerificationWithShelf[]
   },
 
-  async getVerification(id: string): Promise<{ verification: VerificationWithShelf; analysisPoints: AnalysisPoint[] }> {
-    const supabase = createClient()
+  async getVerification(id: string): Promise<{ verification: VerificationWithShelf | null; analysisPoints: AnalysisPoint[] }> {
+    const supabase = await createClient()
 
     const { data: verification, error: verificationError } = await supabase
       .from("verifications")
-      .select("*, shelves(name, planogram_id, store_id)")
+      .select(`
+        *,
+        shelves (
+          name,
+          planogram_id,
+          store_id
+        )
+      `)
       .eq("id", id)
       .single()
 
     if (verificationError) {
       console.error("Error fetching verification:", verificationError)
-      throw verificationError
+      return { verification: null, analysisPoints: [] }
     }
 
     const { data: analysisPoints, error: pointsError } = await supabase
       .from("analysis_points")
-      .select("*")
+      .select(`
+        *
+      `)
       .eq("verification_id", id)
 
     if (pointsError) {
       console.error("Error fetching analysis points:", pointsError)
-      throw pointsError
+      return { verification: verification as VerificationWithShelf, analysisPoints: [] }
     }
 
     return {
@@ -62,18 +79,20 @@ export const VerificationsService = {
   async createVerification(
     verification: VerificationInsert,
     analysisPoints: Omit<AnalysisPointInsert, "verification_id">[],
-  ): Promise<{ verification: Verification; analysisPoints: AnalysisPoint[] }> {
-    const supabase = createClient()
+  ): Promise<{ verification: Verification | null; analysisPoints: AnalysisPoint[] }> {
+    const supabase = await createClient()
 
     const { data: newVerification, error: verificationError } = await supabase
       .from("verifications")
       .insert(verification)
-      .select()
+      .select(`
+        *
+      `)
       .single()
 
     if (verificationError) {
       console.error("Error creating verification:", verificationError)
-      throw verificationError
+      return { verification: null, analysisPoints: [] }
     }
 
     const pointsWithVerificationId = analysisPoints.map((point) => ({
@@ -84,12 +103,19 @@ export const VerificationsService = {
     const { data: newPoints, error: pointsError } = await supabase
       .from("analysis_points")
       .insert(pointsWithVerificationId)
-      .select()
+      .select(`
+        *
+      `)
 
     if (pointsError) {
       console.error("Error creating analysis points:", pointsError)
-      await supabase.from("verifications").delete().eq("id", newVerification.id)
-      throw pointsError
+      // Still attempt to delete the verification but don't throw if that fails
+      try {
+        await supabase.from("verifications").delete().eq("id", newVerification.id)
+      } catch (deleteError) {
+        console.error("Error deleting verification after analysis points failure:", deleteError)
+      }
+      return { verification: null, analysisPoints: [] }
     }
 
     return {
@@ -99,8 +125,8 @@ export const VerificationsService = {
   },
 
   // Subir una imagen a Supabase Storage
-  async uploadImage(file: File, employeeId: string): Promise<string> {
-    const supabase = createClient()
+  async uploadImage(file: File, employeeId: string): Promise<string | null> {
+    const supabase = await createClient()
 
     // Crear un nombre único para el archivo
     const fileExt = file.name.split(".").pop()
@@ -111,7 +137,7 @@ export const VerificationsService = {
 
     if (error) {
       console.error("Error uploading image:", error)
-      throw error
+      return null
     }
 
     const {
