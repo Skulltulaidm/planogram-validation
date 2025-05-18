@@ -352,14 +352,10 @@ export default function ReportsView() {
                                 <SelectItem value="all">Todos los estados</SelectItem>
                                 <SelectItem value="completed">Completados</SelectItem>
                                 <SelectItem value="processing">Procesando</SelectItem>
-                                <SelectItem value="scheduled">Programados</SelectItem>
                                 <SelectItem value="failed">Fallidos</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button variant="outline" className="w-full sm:w-auto">
-                            <Filter className="mr-2 h-4 w-4" />
-                            Más Filtros
-                        </Button>
+                        
                         <Button className="w-full sm:w-auto bg-oxxo-red hover:bg-oxxo-red/90">
                             <Plus className="mr-2 h-4 w-4" />
                             Nuevo Reporte
@@ -370,7 +366,6 @@ export default function ReportsView() {
                 <Tabs defaultValue="recent" className="space-y-4">
                     <TabsList>
                         <TabsTrigger value="recent">Recientes</TabsTrigger>
-                        <TabsTrigger value="scheduled">Programados</TabsTrigger>
                         <TabsTrigger value="templates">Plantillas</TabsTrigger>
                     </TabsList>
 
@@ -448,50 +443,7 @@ export default function ReportsView() {
                         </Card>
                     </TabsContent>
 
-                    <TabsContent value="scheduled" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Reportes Programados</CardTitle>
-                                <CardDescription>Reportes configurados para generación automática</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Nombre</TableHead>
-                                            <TableHead className="hidden md:table-cell">Tipo</TableHead>
-                                            <TableHead className="hidden md:table-cell">Frecuencia</TableHead>
-                                            <TableHead>Próxima Ejecución</TableHead>
-                                            <TableHead className="hidden md:table-cell">Formato</TableHead>
-                                            <TableHead className="text-right">Acciones</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {scheduledReports.map((report) => (
-                                            <TableRow key={report.id}>
-                                                <TableCell className="font-medium">
-                                                    <div className="flex items-center">
-                                                        {getTypeIcon(report.type)}
-                                                        <span className="ml-2">{report.name}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="hidden md:table-cell capitalize">{report.type}</TableCell>
-                                                <TableCell className="hidden md:table-cell capitalize">{report.frequency}</TableCell>
-                                                <TableCell>{new Date(report.next_run).toLocaleDateString()}</TableCell>
-                                                <TableCell className="hidden md:table-cell uppercase">{report.format}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon" className="text-oxxo-red">
-                                                        <ArrowUpRight className="h-4 w-4" />
-                                                        <span className="sr-only">Ver detalles</span>
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                    
 
                     <TabsContent value="templates" className="space-y-4">
                         <Card>

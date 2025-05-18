@@ -95,10 +95,10 @@ export function ImageUploader({ onImageUpload }: ImageUploaderProps) {
                   <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
                     Seleccionar Archivo
                   </Button>
-                  <Button className="bg-oxxo-red hover:bg-oxxo-red/90" onClick={handleCameraClick}>
+                  {/* <Button className="bg-oxxo-red hover:bg-oxxo-red/90" onClick={handleCameraClick}>
                     <Camera className="mr-2 h-5 w-5" />
                     Tomar Foto
-                  </Button>
+                  </Button> */}
                 </div>
                 <input
                     type="file"

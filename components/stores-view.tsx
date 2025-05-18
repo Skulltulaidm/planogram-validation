@@ -149,12 +149,6 @@ export default function StoresView() {
                 </SelectContent>
               </Select>
 
-              {/* Botón más filtros */}
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Filter className="mr-2 h-4 w-4" />
-                Más Filtros
-              </Button>
-
               {/* Diálogo para nueva tienda */}
               <Dialog open={showNewStoreDialog} onOpenChange={setShowNewStoreDialog}>
                 <DialogTrigger asChild>
