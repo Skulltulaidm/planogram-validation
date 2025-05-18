@@ -1,4 +1,3 @@
-// app/employee/dashboard/page.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -6,20 +5,17 @@ import { Camera, CheckCircle, AlertCircle, Clock, TrendingUp, TrendingDown } fro
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { TasksService } from "@/lib/services/tasks-service"
-import { VerificationsService } from "@/lib/services/verifications-service"
-import { ComplianceService } from "@/lib/services/compliance-services"
+import { VerificationsService, type VerificationWithShelf } from "@/lib/services/verifications-service"
+import { ComplianceService } from "@/lib/services/compliance-service"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 
 export default async function EmployeeDashboard() {
-  // Initialize Supabase client
   const supabase = await createClient()
   
-  // Get current user data
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    // Handle not authenticated state
     return (
       <div className="flex-1 p-8">
         <h2 className="text-3xl font-bold">No has iniciado sesión</h2>
@@ -54,9 +50,9 @@ export default async function EmployeeDashboard() {
   let latestVerificationShelf = ""
   
   if (latestVerification) {
-    const shelf = latestVerification.shelves
+    // Use optional chaining to safely access possibly undefined properties
     latestVerificationTime = `Hace ${formatDistanceToNow(new Date(latestVerification.created_at), { locale: es })}`
-    latestVerificationShelf = shelf ? shelf.name : "Desconocido"
+    latestVerificationShelf = latestVerification.shelves?.name || "Desconocido"
   }
 
   return (
@@ -118,8 +114,7 @@ export default async function EmployeeDashboard() {
           ) : (
             pendingTasks.map((task) => {
               const isPriorityHigh = task.priority === "high"
-              const shelf = task.shelves
-              const shelfName = shelf ? shelf.name : "Desconocido"
+              const shelfName = task.shelves?.name || "Desconocido"
               const scheduledTime = task.scheduled_time 
                 ? new Date(task.scheduled_time).toLocaleTimeString('es-MX', {
                     hour: '2-digit',
@@ -175,8 +170,8 @@ export default async function EmployeeDashboard() {
             </div>
           ) : (
             userVerifications.slice(0, 2).map((verification) => {
-              const shelf = verification.shelves
-              const shelfName = shelf ? shelf.name : "Desconocido"
+              // Use optional chaining to safely access properties
+              const shelfName = verification.shelves?.name || "Desconocido"
               const createdAt = new Date(verification.created_at)
               const timeAgo = formatDistanceToNow(createdAt, { locale: es, addSuffix: false })
               const isSuccess = verification.status === "success"

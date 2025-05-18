@@ -1,13 +1,23 @@
+// lib/services/tasks-service.ts
 import { createClient } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/database.types"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"]
 type TaskUpdate = Database["public"]["Tables"]["tasks"]["Update"]
+type Shelf = Database["public"]["Tables"]["shelves"]["Row"]
+type Planogram = Database["public"]["Tables"]["planograms"]["Row"]
+
+// joined shelves
+export type TaskWithShelf = Task & {
+  shelves: (Shelf & {
+    planograms: Planogram | null
+  }) | null
+}
 
 export const TasksService = {
   // Obtener todas las tareas de un empleado
-  async getEmployeeTasks(employeeId: string): Promise<Task[]> {
+  async getEmployeeTasks(employeeId: string): Promise<TaskWithShelf[]> {
     const supabase = createClient()
     const { data, error } = await supabase
       .from("tasks")
@@ -20,11 +30,11 @@ export const TasksService = {
       throw error
     }
 
-    return data || []
+    return (data || []) as TaskWithShelf[]
   },
 
   // Obtener tareas pendientes de un empleado
-  async getPendingTasks(employeeId: string): Promise<Task[]> {
+  async getPendingTasks(employeeId: string): Promise<TaskWithShelf[]> {
     const supabase = createClient()
     const { data, error } = await supabase
       .from("tasks")
@@ -38,7 +48,7 @@ export const TasksService = {
       throw error
     }
 
-    return data || []
+    return (data || []) as TaskWithShelf[]
   },
 
   // Crear una nueva tarea
