@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from "@/lib/supabase/database.types" // Ajusta la ruta si es necesario
+import type { Database } from "@/lib/supabase/database.types"
 
 // Este cliente solo se usa en el servidor
 export const supabaseAdmin = createClient(

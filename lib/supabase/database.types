@@ -262,6 +262,108 @@ export interface Database {
           updated_at?: string
         }
       }
+      reports: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          frequency: string
+          last_generated: string
+          format: string
+          status: "completed" | "processing" | "scheduled" | "failed"
+          size: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          frequency: string
+          last_generated?: string
+          format: string
+          status: "completed" | "processing" | "scheduled" | "failed"
+          size?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          frequency?: string
+          last_generated?: string
+          format?: string
+          status?: "completed" | "processing" | "scheduled" | "failed"
+          size?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      },
+      scheduled_reports: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          frequency: string
+          next_run: string
+          recipients: string[]
+          format: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          frequency: string
+          next_run: string
+          recipients: string[]
+          format: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          frequency?: string
+          next_run?: string
+          recipients?: string[]
+          format?: string
+          created_at?: string
+          updated_at?: string
+        }
+      },
+      report_templates: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          type: string
+          format: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description: string
+          type: string
+          format: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          type?: string
+          format?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

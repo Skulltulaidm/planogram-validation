@@ -24,14 +24,14 @@ export type VerificationWithDetails = Verification & {
   }
 }
 
-export const VerificationsService = {
-  // Métodos existentes
-  async getEmployeeVerifications(employeeId: string): Promise<VerificationWithShelf[]> {
+export class VerificationsService {
+  // Métodos existentes convertidos a estáticos
+  static async getEmployeeVerifications(employeeId: string): Promise<VerificationWithShelf[]> {
     const supabase = await createClient()
-    
+
     const { data, error } = await supabase
-      .from("verifications")
-      .select(`
+        .from("verifications")
+        .select(`
         *,
         shelves (
           name,
@@ -39,8 +39,8 @@ export const VerificationsService = {
           store_id
         )
       `)
-      .eq("employee_id", employeeId)
-      .order("created_at", { ascending: false })
+        .eq("employee_id", employeeId)
+        .order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching verifications:", error)
@@ -48,14 +48,14 @@ export const VerificationsService = {
     }
 
     return (data || []) as VerificationWithShelf[]
-  },
+  }
 
-  async getVerification(id: string): Promise<{ verification: VerificationWithShelf | null; analysisPoints: AnalysisPoint[] }> {
+  static async getVerification(id: string): Promise<{ verification: VerificationWithShelf | null; analysisPoints: AnalysisPoint[] }> {
     const supabase = await createClient()
 
     const { data: verification, error: verificationError } = await supabase
-      .from("verifications")
-      .select(`
+        .from("verifications")
+        .select(`
         *,
         shelves (
           name,
@@ -63,8 +63,8 @@ export const VerificationsService = {
           store_id
         )
       `)
-      .eq("id", id)
-      .single()
+        .eq("id", id)
+        .single()
 
     if (verificationError) {
       console.error("Error fetching verification:", verificationError)
@@ -72,11 +72,11 @@ export const VerificationsService = {
     }
 
     const { data: analysisPoints, error: pointsError } = await supabase
-      .from("analysis_points")
-      .select(`
+        .from("analysis_points")
+        .select(`
         *
       `)
-      .eq("verification_id", id)
+        .eq("verification_id", id)
 
     if (pointsError) {
       console.error("Error fetching analysis points:", pointsError)
@@ -87,21 +87,21 @@ export const VerificationsService = {
       verification: verification as VerificationWithShelf,
       analysisPoints: analysisPoints || [],
     }
-  },
+  }
 
-  async createVerification(
-    verification: VerificationInsert,
-    analysisPoints: Omit<AnalysisPointInsert, "verification_id">[],
+  static async createVerification(
+      verification: VerificationInsert,
+      analysisPoints: Omit<AnalysisPointInsert, "verification_id">[],
   ): Promise<{ verification: Verification | null; analysisPoints: AnalysisPoint[] }> {
     const supabase = await createClient()
 
     const { data: newVerification, error: verificationError } = await supabase
-      .from("verifications")
-      .insert(verification)
-      .select(`
+        .from("verifications")
+        .insert(verification)
+        .select(`
         *
       `)
-      .single()
+        .single()
 
     if (verificationError) {
       console.error("Error creating verification:", verificationError)
@@ -114,9 +114,9 @@ export const VerificationsService = {
     }))
 
     const { data: newPoints, error: pointsError } = await supabase
-      .from("analysis_points")
-      .insert(pointsWithVerificationId)
-      .select(`
+        .from("analysis_points")
+        .insert(pointsWithVerificationId)
+        .select(`
         *
       `)
 
@@ -135,10 +135,10 @@ export const VerificationsService = {
       verification: newVerification,
       analysisPoints: newPoints || [],
     }
-  },
+  }
 
   // Subir una imagen a Supabase Storage
-  async uploadImage(file: File, employeeId: string): Promise<string | null> {
+  static async uploadImage(file: File, employeeId: string): Promise<string | null> {
     const supabase = await createClient()
 
     // Crear un nombre único para el archivo
@@ -158,13 +158,13 @@ export const VerificationsService = {
     } = supabase.storage.from("planogram-images").getPublicUrl(filePath)
 
     return publicUrl
-  },
+  }
 
-  // NUEVO MÉTODO: Obtener el historial de verificaciones con información relacionada completa
-  async getEmployeeVerificationHistory(
-    employeeId: string,
-    limit = 50,
-    offset = 0
+  // MÉTODO QUE YA TENÍAS: Obtener el historial de verificaciones con información relacionada completa
+  static async getEmployeeVerificationHistory(
+      employeeId: string,
+      limit = 50,
+      offset = 0
   ): Promise<VerificationWithDetails[]> {
     if (!employeeId) {
       console.error("No employee ID provided to getEmployeeVerificationHistory")
@@ -173,10 +173,10 @@ export const VerificationsService = {
 
     try {
       const supabase = await createClient()
-      
+
       const { data, error } = await supabase
-        .from("verifications")
-        .select(`
+          .from("verifications")
+          .select(`
           *,
           shelves (
             *,
@@ -184,9 +184,9 @@ export const VerificationsService = {
             stores:store_id (*)
           )
         `)
-        .eq("employee_id", employeeId)
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1)
+          .eq("employee_id", employeeId)
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limit - 1)
 
       if (error) {
         console.error("Error fetching verification history:", error)

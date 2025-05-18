@@ -1,3 +1,4 @@
+// app/reports/page.tsx
 import ReportsView from "@/components/reports-view"
 import type { Metadata } from "next"
 

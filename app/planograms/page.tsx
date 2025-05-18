@@ -1,3 +1,4 @@
+// app/planograms/page.tsx
 import PlanogramsView from "@/components/planograms-view"
 import type { Metadata } from "next"
 

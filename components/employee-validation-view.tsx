@@ -1,200 +1,404 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
 import { ImageUploader } from "@/components/image-uploader"
 import { ImageAnalyzer } from "@/components/image-analyzer"
+import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/components/ui/use-toast"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Camera, CheckCircle } from "lucide-react"
+import { AlertCircle, Loader2, Info } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-// Tipos de estantes disponibles
-const shelfTypes = [
-  { id: "shelf-1", name: "Estante 1 - Bebidas" },
-  { id: "shelf-2", name: "Estante 2 - Snacks" },
-  { id: "shelf-3", name: "Estante 3 - Lácteos" },
-  { id: "shelf-4", name: "Estante 4 - Productos de Limpieza" },
-  { id: "shelf-5", name: "Estante 5 - Cuidado Personal" },
-]
+// Tipo para los puntos de análisis
+interface AnalysisPoint {
+  id: string
+  x: number
+  y: number
+  type: "error" | "warning" | "success"
+  message: string
+  details: string
+}
 
-// Datos de ejemplo para los puntos de análisis
-const sampleAnalysisPoints = [
-  {
-    id: "point-1",
-    x: 25,
-    y: 30,
-    type: "error",
-    message: "Producto faltante: Agua mineral 1L",
-    details: "Se requieren 3 unidades según el planograma. Inventario disponible: 5 unidades.",
-  },
-  {
-    id: "point-2",
-    x: 45,
-    y: 60,
-    type: "warning",
-    message: "Producto mal ubicado: Refresco de cola 2L",
-    details: "Debe estar en la segunda repisa, no en la tercera. Por favor reubique el producto.",
-  },
-  {
-    id: "point-3",
-    x: 70,
-    y: 40,
-    type: "error",
-    message: "Producto incorrecto: Jugo de naranja",
-    details: "Este espacio debe ser ocupado por jugo de manzana según el planograma actual.",
-  },
-  {
-    id: "point-4",
-    x: 85,
-    y: 75,
-    type: "success",
-    message: "Sección correcta: Aguas saborizadas",
-    details: "Esta sección cumple correctamente con el planograma establecido.",
-  },
-]
+// Tipo para los productos del planograma
+interface PlanogramProduct {
+  CB: string
+  Nombre: string
+  Charola: string
+  "Posicion en Charola": string
+  "Cantidad de Frentes": string
+  Altura: string
+  Ancho: string
+  Profundo: string
+}
+
+// Tipo para los estantes
+interface Shelf {
+  id: string
+  name: string
+}
+
+// Tipo para el perfil de usuario
+interface UserProfile {
+  id: string
+  first_name: string
+  last_name: string
+  role: "employee" | "supervisor"
+}
 
 export function EmployeeValidationView() {
-  const [selectedShelf, setSelectedShelf] = useState<string>("")
+  // Estado para almacenar los datos
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [shelves, setShelves] = useState<Shelf[]>([])
+  const [selectedShelf, setSelectedShelf] = useState<string | null>(null)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false)
   const [analysisComplete, setAnalysisComplete] = useState<boolean>(false)
-  const [analysisPoints, setAnalysisPoints] = useState<any[]>([])
+  const [analysisPoints, setAnalysisPoints] = useState<AnalysisPoint[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Función para manejar la carga de imágenes
+  // Cliente de Supabase
+  const supabase = createClient()
+  const { toast } = useToast()
+
+  // Obtener datos del usuario al cargar el componente
+  useEffect(() => {
+    async function fetchInitialData() {
+      try {
+        setLoading(true)
+
+        // Obtener usuario actual (si está autenticado)
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (!userError && user) {
+          // Obtener perfil del usuario
+          const { data: profileData, error: profileError } = await supabase
+              .from("profiles")
+              .select("id, first_name, last_name, role")
+              .eq("id", user.id)
+              .single()
+
+          if (!profileError && profileData) {
+            setUserProfile(profileData)
+          }
+        }
+
+        // Crear estantes predeterminados (independientemente de si hay usuario)
+        // Estos son estantes simulados basados en los datos del planograma
+        const defaultShelves: Shelf[] = [
+          { id: 'charola-1-3', name: 'Charolas 1-3 (Inferior)' },
+          { id: 'charola-4-6', name: 'Charolas 4-6 (Media)' },
+          { id: 'charola-7-9', name: 'Charolas 7-9 (Superior)' }
+        ]
+
+        setShelves(defaultShelves)
+        setSelectedShelf(defaultShelves[0].id)
+
+      } catch (err) {
+        console.error("Error al cargar datos iniciales:", err)
+        setError(err instanceof Error ? err.message : "Ocurrió un error desconocido")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInitialData()
+  }, [])
+
+  // Manejar la subida de imágenes
   const handleImageUpload = (imageUrl: string) => {
     setUploadedImage(imageUrl)
     setAnalysisComplete(false)
     setAnalysisPoints([])
   }
 
-  // Función para iniciar el análisis de la imagen
-  const startAnalysis = () => {
-    if (!selectedShelf || !uploadedImage) return
+  // Manejar el análisis de la imagen
+  const analyzeImage = async () => {
+    if (!uploadedImage || !selectedShelf) {
+      toast({
+        title: "Error",
+        description: "Selecciona un estante y sube una imagen para analizar",
+        variant: "destructive",
+      })
+      return
+    }
 
-    setIsAnalyzing(true)
+    try {
+      setIsAnalyzing(true)
 
-    // Simulamos un análisis que toma tiempo
-    setTimeout(() => {
-      setIsAnalyzing(false)
+      // Convertir la imagen base64 a un blob para enviarlo
+      const base64Data = uploadedImage.split(',')[1]
+      const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob())
+
+      // Crear el FormData para enviar a la API de FastAPI
+      const formData = new FormData()
+      formData.append("store_id", "default-store")
+
+      // No necesitamos obtener el planograma desde la API, usamos el predeterminado
+      // que ya está configurado en el backend
+
+      formData.append("shelf_id", selectedShelf)
+      formData.append("image", blob, "shelf_image.jpg")
+
+      // Enviar a la API de FastAPI
+      const response = await fetch("http://localhost:8000/analyze-shelf/", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Error al analizar la imagen")
+      }
+
+      const result = await response.json()
+
+      // Transformar los resultados del análisis al formato que espera ImageAnalyzer
+      const newAnalysisPoints: AnalysisPoint[] = []
+
+      if (result.analysis_result && Array.isArray(result.analysis_result)) {
+        result.analysis_result.forEach((item: any, index: number) => {
+          // Extraer coordenadas del string "(x, y)"
+          const coordsMatch = item.coordinates.match(/\((\d+),\s*(\d+)\)/)
+          if (coordsMatch) {
+            const x = parseInt(coordsMatch[1])
+            const y = parseInt(coordsMatch[2])
+
+            // Determinar en qué rango de charolas estamos trabajando
+            const charola = parseInt(coordsMatch[2])
+            let yPosition = 0
+
+            if (selectedShelf === 'charola-1-3') {
+              // Para las charolas 1-3, ajustamos las posiciones verticales
+              if (charola === 1) yPosition = 83
+              else if (charola === 2) yPosition = 50
+              else if (charola === 3) yPosition = 17
+            } else if (selectedShelf === 'charola-4-6') {
+              // Para las charolas 4-6
+              if (charola === 4) yPosition = 83
+              else if (charola === 5) yPosition = 50
+              else if (charola === 6) yPosition = 17
+            } else {
+              // Para las charolas 7-9
+              if (charola === 7) yPosition = 83
+              else if (charola === 8) yPosition = 50
+              else if (charola === 9) yPosition = 17
+            }
+
+            // Calcular posición horizontal normalizada (como porcentaje del ancho)
+            // Si hay 23 posiciones, dividimos el ancho en 23 partes
+            const xPosition = (x / 23) * 100
+
+            // Crear un punto de análisis
+            const point: AnalysisPoint = {
+              id: `point-${index}`,
+              x: xPosition,
+              y: yPosition,
+              type: item.error_type === "empty_spot" ? "error" : "warning",
+              message: item.error_type === "empty_spot"
+                  ? "Producto faltante"
+                  : "Producto mal colocado",
+              details: item.error_type === "empty_spot"
+                  ? `Esta posición (${x}, ${y}) debería tener un producto.`
+                  : `El producto con código ${item.CB || 'desconocido'} no debería estar en esta posición (${x}, ${y}).`
+            }
+
+            newAnalysisPoints.push(point)
+          }
+        })
+      }
+
+      // Si no hay errores, agregar un punto de éxito
+      if (newAnalysisPoints.length === 0) {
+        newAnalysisPoints.push({
+          id: "success-1",
+          x: 50,
+          y: 50,
+          type: "success",
+          message: "Planograma correcto",
+          details: "Este estante cumple correctamente con el planograma establecido."
+        })
+      }
+
+      setAnalysisPoints(newAnalysisPoints)
       setAnalysisComplete(true)
-      setAnalysisPoints(sampleAnalysisPoints)
-    }, 2000)
+
+      // Guardar los resultados en Supabase si hay un usuario autenticado
+      if (userProfile?.id) {
+        await saveVerification(newAnalysisPoints)
+      }
+
+      toast({
+        title: "Análisis completado",
+        description: "Se ha analizado la imagen correctamente",
+      })
+    } catch (err) {
+      console.error("Error al analizar imagen:", err)
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "No se pudo analizar la imagen",
+        variant: "destructive",
+      })
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
-  // Función para reiniciar el proceso
-  const resetProcess = () => {
-    setUploadedImage(null)
-    setAnalysisComplete(false)
-    setAnalysisPoints([])
+  // Guardar la verificación en Supabase
+  const saveVerification = async (points: AnalysisPoint[]) => {
+    if (!userProfile?.id || !selectedShelf || !uploadedImage) return
+
+    try {
+      // Calcular el porcentaje de cumplimiento basado en los puntos de análisis
+      const errorPoints = points.filter(p => p.type === "error").length
+      const warningPoints = points.filter(p => p.type === "warning").length
+      const totalPoints = points.length
+
+      // Si solo hay puntos de éxito, 100% de cumplimiento
+      const compliance = totalPoints === 0 ||
+      (totalPoints === 1 && points[0].type === "success")
+          ? 100
+          : Math.max(0, 100 - (errorPoints * 15 + warningPoints * 5))
+
+      // Determinar el estado general
+      let status: "success" | "warning" | "error" = "success"
+      if (errorPoints > 0) {
+        status = "error"
+      } else if (warningPoints > 0) {
+        status = "warning"
+      }
+
+      // Aquí se insertaría en Supabase, pero como no tenemos una tabla específica
+      // para este planograma predeterminado, simplemente registramos el resultado
+      console.log("Verificación completada:", {
+        shelf_id: selectedShelf,
+        employee_id: userProfile.id,
+        compliance,
+        status,
+        points
+      })
+
+      // Si se requiere guardar los datos realmente, se usaría supabase.from(...).insert(...)
+
+    } catch (err) {
+      console.error("Error al guardar verificación:", err)
+      toast({
+        title: "Advertencia",
+        description: "El análisis se completó pero hubo un error al guardar los resultados",
+        variant: "destructive",
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+        <div className="container py-10 space-y-6">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-80 w-full" />
+        </div>
+    )
+  }
+
+  if (error) {
+    return (
+        <div className="container py-10">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+    )
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Validación de Planogramas</h2>
-      </div>
+      <div className="container py-10 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Validación de Planogramas</CardTitle>
+            <CardDescription>
+              Verifica que los productos estén correctamente colocados según el planograma
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Alert className="mb-4">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Planograma Estándar Cargado</AlertTitle>
+                <AlertDescription>
+                  Se ha cargado el planograma estándar con todos los productos. Selecciona la sección del estante a validar.
+                </AlertDescription>
+              </Alert>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Verificación de Planograma</CardTitle>
-          <CardDescription>
-            Sube una foto del estante para verificar si cumple con el planograma establecido
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!uploadedImage ? (
-            <>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Selecciona el tipo de estante:</label>
-                <Select value={selectedShelf} onValueChange={setSelectedShelf}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Seleccionar estante" />
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Sección de Estante</label>
+                <Select
+                    value={selectedShelf || ""}
+                    onValueChange={setSelectedShelf}
+                    disabled={shelves.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={
+                      shelves.length === 0
+                          ? "No hay secciones disponibles"
+                          : "Selecciona una sección"
+                    } />
                   </SelectTrigger>
                   <SelectContent>
-                    {shelfTypes.map((shelf) => (
-                      <SelectItem key={shelf.id} value={shelf.id}>
-                        {shelf.name}
-                      </SelectItem>
+                    {shelves.map((shelf) => (
+                        <SelectItem key={shelf.id} value={shelf.id}>
+                          {shelf.name}
+                        </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
-              <ImageUploader onImageUpload={handleImageUpload} />
-            </>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">
-                    {shelfTypes.find((shelf) => shelf.id === selectedShelf)?.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {analysisComplete
-                      ? "Análisis completado"
-                      : isAnalyzing
-                        ? "Analizando imagen..."
-                        : "Imagen lista para análisis"}
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" onClick={resetProcess}>
-                  Cambiar imagen
-                </Button>
-              </div>
-
-              <ImageAnalyzer
-                imageUrl={uploadedImage}
-                isAnalyzing={isAnalyzing}
-                analysisComplete={analysisComplete}
-                analysisPoints={analysisPoints}
-              />
-
-              {!analysisComplete && !isAnalyzing && (
-                <Button onClick={startAnalysis} className="w-full bg-oxxo-red hover:bg-oxxo-red/90">
-                  <Camera className="mr-2 h-5 w-5" />
-                  Analizar Imagen
-                </Button>
-              )}
-
-              {analysisComplete && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
-                    <div className="flex items-center">
-                      <div className="mr-4 rounded-full bg-oxxo-red p-2">
-                        <CheckCircle className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium">Resultado del análisis</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Se encontraron {analysisPoints.filter((p) => p.type === "error").length} problemas y{" "}
-                          {analysisPoints.filter((p) => p.type === "warning").length} advertencias
-                        </p>
-                      </div>
+            <div className="mt-6">
+              {!uploadedImage ? (
+                  <ImageUploader onImageUpload={handleImageUpload} />
+              ) : (
+                  <div className="space-y-4">
+                    <ImageAnalyzer
+                        imageUrl={uploadedImage}
+                        isAnalyzing={isAnalyzing}
+                        analysisComplete={analysisComplete}
+                        analysisPoints={analysisPoints}
+                    />
+                    <div className="flex justify-end space-x-4">
+                      <Button
+                          variant="outline"
+                          onClick={() => {
+                            setUploadedImage(null)
+                            setAnalysisComplete(false)
+                            setAnalysisPoints([])
+                          }}
+                      >
+                        Cambiar imagen
+                      </Button>
+                      <Button
+                          className="bg-oxxo-red hover:bg-oxxo-red/90"
+                          onClick={analyzeImage}
+                          disabled={isAnalyzing || !selectedShelf}
+                      >
+                        {isAnalyzing ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Analizando...
+                            </>
+                        ) : (
+                            "Analizar imagen"
+                        )}
+                      </Button>
                     </div>
-                    <div className="text-2xl font-bold">75%</div>
                   </div>
-
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Instrucciones:</h4>
-                    <ul className="list-disc pl-5 space-y-1 text-sm">
-                      <li>Haz clic en los puntos marcados para ver detalles de los problemas detectados</li>
-                      <li>Corrige los problemas identificados en el estante físico</li>
-                      <li>Vuelve a tomar una foto para verificar las correcciones</li>
-                    </ul>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1">
-                      Guardar Reporte
-                    </Button>
-                    <Button className="flex-1 bg-oxxo-red hover:bg-oxxo-red/90">Corregir y Verificar</Button>
-                  </div>
-                </div>
               )}
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
   )
 }

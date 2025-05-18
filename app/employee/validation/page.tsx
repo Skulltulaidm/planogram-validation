@@ -1,3 +1,4 @@
+// app/employee/validation/page.tsx
 import { EmployeeValidationView } from "@/components/employee-validation-view"
 import type { Metadata } from "next"
 
