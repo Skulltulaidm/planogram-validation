@@ -50,6 +50,10 @@ PlanoVista es una aplicación web para la validación y gestión de planogramas 
 
 ## 💻 Capturas de pantalla
 
+![Image](https://github.com/user-attachments/assets/e91d292f-7074-45f1-a3d8-25da7a7875cb)
+![Image](https://github.com/user-attachments/assets/ba7acfe3-78d5-411d-93b0-ff05704c0827)
+![Image](https://github.com/user-attachments/assets/8b3f3703-50a2-457c-903b-f7999989a541)
+
 
 ## 📝 Licencia
 
