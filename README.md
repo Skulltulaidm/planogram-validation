@@ -48,6 +48,9 @@ PlanoVista es una aplicación web para la validación y gestión de planogramas 
 - **Empleado**: Verifica planogramas, visualiza tareas e historial
 - **Supervisor**: Gestiona tiendas, crea planogramas, analiza métricas
 
+## 💻 Capturas de pantalla
+
+
 ## 📝 Licencia
 
 [MIT](LICENSE)
