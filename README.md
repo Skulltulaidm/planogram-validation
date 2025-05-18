@@ -2,7 +2,7 @@
 
 # 🛒 PlanoVista
 
-### Sistema de Validación de Planogramas con IA para tiendas OXXO
+### Sistema de Validación de Planogramas con Computer Vision
 
 [![Tech Stack](https://skillicons.dev/icons?i=nextjs,react,typescript,tailwind,supabase,vercel&theme=light)](https://skillicons.dev)
 
@@ -10,7 +10,7 @@
 
 ## ✨ Descripción
 
-PlanoVista es una aplicación web para la validación y gestión de planogramas en tiendas de FEMSA. El sistema utiliza Computer Vision para analizar fotos de estantes, verificar el cumplimiento de planogramas y proporcionar feedback inmediato a empleados y supervisores.
+PlanoVista es una aplicación web para la validación y gestión de planogramas en tiendas de FEMSA. El sistema utiliza Computer Vision para analizar fotos de estantes, verificar el cumplimiento de planogramas y proporcionar feedback inmediato a empleados.
 
 ## 🚀 Tecnologías
 
@@ -22,8 +22,8 @@ PlanoVista es una aplicación web para la validación y gestión de planogramas 
 
 1. Clona el repositorio
    ```bash
-   git clone https://github.com/yourusername/planovista.git
-   cd planovista
+   git clone https://github.com/yourusername/planogram-validation.git
+   cd planogram-validation
    ```
 
 2. Instala dependencias
