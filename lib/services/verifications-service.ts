@@ -1,3 +1,5 @@
+// En lib/services/verifications-service.ts
+
 import { createClient } from "@/lib/supabase/server"
 import type { Database } from "@/lib/supabase/database.types"
 
@@ -6,13 +8,24 @@ type VerificationInsert = Database["public"]["Tables"]["verifications"]["Insert"
 type AnalysisPoint = Database["public"]["Tables"]["analysis_points"]["Row"]
 type AnalysisPointInsert = Database["public"]["Tables"]["analysis_points"]["Insert"]
 type Shelf = Database["public"]["Tables"]["shelves"]["Row"]
+type Planogram = Database["public"]["Tables"]["planograms"]["Row"]
+type Store = Database["public"]["Tables"]["stores"]["Row"]
 
 // joined shelves
 export type VerificationWithShelf = Verification & {
   shelves: Shelf | null
 }
 
+// Tipo extendido para verificaciones con información completa relacionada
+export type VerificationWithDetails = Verification & {
+  shelves?: Shelf & {
+    planograms?: Planogram
+    stores?: Store
+  }
+}
+
 export const VerificationsService = {
+  // Métodos existentes
   async getEmployeeVerifications(employeeId: string): Promise<VerificationWithShelf[]> {
     const supabase = await createClient()
     
@@ -146,4 +159,44 @@ export const VerificationsService = {
 
     return publicUrl
   },
+
+  // NUEVO MÉTODO: Obtener el historial de verificaciones con información relacionada completa
+  async getEmployeeVerificationHistory(
+    employeeId: string,
+    limit = 50,
+    offset = 0
+  ): Promise<VerificationWithDetails[]> {
+    if (!employeeId) {
+      console.error("No employee ID provided to getEmployeeVerificationHistory")
+      return []
+    }
+
+    try {
+      const supabase = await createClient()
+      
+      const { data, error } = await supabase
+        .from("verifications")
+        .select(`
+          *,
+          shelves (
+            *,
+            planograms:planogram_id (*),
+            stores:store_id (*)
+          )
+        `)
+        .eq("employee_id", employeeId)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      if (error) {
+        console.error("Error fetching verification history:", error)
+        return []
+      }
+
+      return (data || []) as VerificationWithDetails[]
+    } catch (err) {
+      console.error("Unexpected error in getEmployeeVerificationHistory:", err)
+      return []
+    }
+  }
 }
