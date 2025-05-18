@@ -7,22 +7,21 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Sistema de Validación de Planogramas",
-  description: "Sistema de validación de planogramas con IA para tiendas de retail",
-    generator: 'v0.dev'
+  title: "PlanoHUB",
+  description: "Sistema de validación de planogramas con IA para tiendas OXXO"
 }
 
 export default function RootLayout({
-  children,
-}: Readonly<{
+                                     children,
+                                   }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es">
+      <html lang="es" suppressHydrationWarning>
       <body className={inter.className}>
-        {children}
-        <Toaster />
+      {children}
+      <Toaster />
       </body>
-    </html>
+      </html>
   )
 }

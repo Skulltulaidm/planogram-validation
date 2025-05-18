@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -28,7 +27,7 @@ export function AuthForm() {
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -37,16 +36,14 @@ export function AuthForm() {
         throw error
       }
 
-      // Obtener el perfil del usuario para determinar su rol
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single()
+      // Obtener el rol directamente desde los metadatos del usuario
+      const role = data.user?.user_metadata?.role
 
-      if (profile?.role === "employee") {
+      console.log("Rol desde metadatos:", role)
+
+      if (role === "employee") {
         router.push("/employee/dashboard")
-      } else if (profile?.role === "supervisor") {
+      } else if (role === "supervisor") {
         router.push("/supervisor/dashboard")
       } else {
         router.push("/")
@@ -54,6 +51,7 @@ export function AuthForm() {
 
       router.refresh()
     } catch (error: any) {
+      console.error("Error completo:", error)
       toast({
         title: "Error al iniciar sesión",
         description: error.message,
@@ -69,6 +67,8 @@ export function AuthForm() {
     setIsLoading(true)
 
     try {
+      console.log('Registrando usuario...')
+
       // 1. Crear el usuario en auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -83,10 +83,13 @@ export function AuthForm() {
       })
 
       if (authError) {
+        console.error('Error en signUp:', authError)
         throw authError
       }
 
       if (authData.user) {
+        console.log('Usuario autenticado creado:', authData.user.id)
+
         // 2. Crear el perfil del usuario
         const { error: profileError } = await supabase.from("profiles").insert({
           id: authData.user.id,
@@ -96,15 +99,25 @@ export function AuthForm() {
         })
 
         if (profileError) {
+          console.error('Error al crear perfil:', profileError)
           throw profileError
         }
 
+        console.log('Perfil creado correctamente')
         toast({
           title: "Registro exitoso",
           description: "Tu cuenta ha sido creada. Por favor, inicia sesión.",
         })
+
+        // Restablecer formulario
+        setEmail("")
+        setPassword("")
+        setFirstName("")
+        setLastName("")
+        setRole("employee")
       }
     } catch (error: any) {
+      console.error('Error completo:', error)
       toast({
         title: "Error al registrarse",
         description: error.message,
