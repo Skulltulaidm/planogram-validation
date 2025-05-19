@@ -99,7 +99,7 @@ export function AuthForm() {
         })
 
         if (profileError) {
-          console.error('Error al crear perfil:', profileError)
+          console.error('Error al crear perfil:', profileError, profileError?.message, profileError)
           throw profileError
         }
 
@@ -117,7 +117,7 @@ export function AuthForm() {
         setRole("employee")
       }
     } catch (error: any) {
-      console.error('Error completo:', error)
+      console.error('Error completo:', error?.message, error)
       toast({
         title: "Error al registrarse",
         description: error.message,
